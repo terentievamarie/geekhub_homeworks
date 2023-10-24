@@ -1,18 +1,27 @@
 # 6. Write a script to get the maximum and minimum value in a dictionary.
 
-dict_1 = {'a': 1, 'b': 65, 'c': 55, 'd': -12, 'e': 98, 'f': -101}
+dict_1 = {
+    'id': 17,
+    'name': 'NoName',
+    'freeze': -35,
+    'count': 1,
+    'admin': False,
+    'errors': [400, 403],
+    'email': None,
+    'salary': 3750,
+    'speed': 75.8,
+    'file': 100644,
+}
 
-min_1 = dict_1['a']
-max_1 = dict_1['a']
-dict_result = {}
+max_value = dict_1['id']
+min_value = dict_1['id']
 
-for k, v in dict_1.items():
-	if dict_1[k] < min_1:
-		dict_result['min'] = v 
+for key, value in dict_1.items():
+    if isinstance(value, (int, float, bool)):
+        if max_value is None or value > max_value:
+            max_value = value
+        if min_value is None or value < min_value:
+            min_value = value
 
-for k, v in dict_1.items():
-	if dict_1[k] > max_1:
-		dict_result['max'] = v
-		
-print(dict_result)
-
+print(f"Maximum value: {max_value}")
+print(f"Minimum value: {min_value}")
