@@ -8,7 +8,9 @@
 dict_1 = {'foo': 'bar', 'bar': 'buz'}
 dict_2 = {'dou': 'jones', 'USD': 36}
 dict_3 = {'AUD': 19.2, 'name': 'Tom'}
-d_result = dict(list(dict_1.items()) + list(dict_2.items()) + list(dict_3.items())
-    
-print(d_result)
+d_result = dict(list(dict_1.items())
+                + list(dict_2.items())
+                + list(dict_3.items())
+                )
 
+print(d_result)
