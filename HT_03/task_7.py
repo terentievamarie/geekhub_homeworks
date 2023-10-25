@@ -12,4 +12,3 @@ for i in range(input_number + 1):
     result_dict[i] = i ** 2
 
 print(result_dict)
- 

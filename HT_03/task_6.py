@@ -46,4 +46,3 @@ print(f"Maximum str value: {max_value_str}")
 print(f"Minimum str value: {min_value_str}")
 print(f"Maximum value in list: {max_value_list}")
 print(f"Minimum value in list: {min_value_list}")
- 

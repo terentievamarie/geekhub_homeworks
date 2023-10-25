@@ -11,4 +11,3 @@ end_year = int(input("Please enter the end year: "))
 for i in range(start_year, end_year + 1):
     if (i % 4 == 0 and i % 100 != 0) or (i % 400 == 0):
         print(i)
- 
