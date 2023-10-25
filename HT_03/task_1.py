@@ -4,7 +4,6 @@
 """
 
 input_value = input("Please, enter your value: ")
-
 list_of_tuples = [(1, True, "Python", 3.4, "One"), (3, 3.1, "String", "It's cool", False), (True, False, 2, 3, "Name", 444, "Three", "geekhub", 4.55555)]
 
 for i in range(len(list_of_tuples)):
