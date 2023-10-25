@@ -19,3 +19,4 @@ test_list = [
 
 test_list = [i for i in test_list if i]
 print(test_list)
+
