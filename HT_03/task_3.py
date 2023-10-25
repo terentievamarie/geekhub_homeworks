@@ -14,3 +14,4 @@ d_result = dict(list(dict_1.items())
                 )
 
 print(d_result)
+ 
