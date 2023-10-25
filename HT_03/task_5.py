@@ -16,3 +16,4 @@ dict_unique = {}
 [dict_unique.update({k: v}) for k, v in dict_1.items() if v not in dict_unique.values()]
 
 print(dict_unique)
+ 
