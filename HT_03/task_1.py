@@ -15,3 +15,4 @@ for i in range(len(list_of_tuples)):
     list_of_tuples[i] = tuple(list_of_tuples[i][:-1] + (input_value,))
 
 print(list_of_tuples)
+
