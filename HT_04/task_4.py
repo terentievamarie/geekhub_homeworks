@@ -30,3 +30,4 @@ except SpecificError as specific_error:
         print(f'Original exception: {custom_error.__cause__}')
 else:
     print("Cool!")
+ 

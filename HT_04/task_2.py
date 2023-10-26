@@ -21,3 +21,4 @@ try:
     print(f"{number_1} is allowed")
 except NegativeValueError as error:
     print(error)
+ 

@@ -21,3 +21,4 @@ try:
     print(f"Entered age is {age_1}")
 except InvalidAgeError as e:
     print("Entered age is not allowed")
+ 
