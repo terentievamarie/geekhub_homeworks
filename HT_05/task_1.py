@@ -26,3 +26,5 @@ def season(month):
     except ValueError:
         return "Invalid input"
  
+print(season(1))
+ 
