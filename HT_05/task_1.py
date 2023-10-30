@@ -18,10 +18,9 @@ def season(month_number):
 
     try:
         month = int(month_number)
-        if 1 <= month <= 12:
-            for season_name, months in seasons.items():
-                if month in months:
-                    return f"Season: {season_name}"
+        for season_name, months in seasons.items():
+            if month in months:
+                return f"Season: {season_name}"
     except ValueError:
          return "Invalid input. Enter a valid integer between (1-12)"
 
