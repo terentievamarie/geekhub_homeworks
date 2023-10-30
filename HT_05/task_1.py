@@ -24,7 +24,7 @@ def season(month_number):
                     return f"Season: {season_name}"
             return "Invalid input"
     except ValueError:
-        return "Invalid input"
+        return "Invalid input. Try again"
 
 print(season(12))
 print(season('f'))
