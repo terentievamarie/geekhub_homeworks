@@ -8,23 +8,24 @@
 """
 
 
-def season(month):
+def season(month_number):
+    seasons = {
+        'Winter': [12, 1, 2],
+        'Spring': [3, 4, 5],
+        'Summer': [6, 7, 8],
+        'Autumn': [9, 10, 11]
+    }
+
     try:
-        month_number = int(month)
-        res = ''
-        if month_number == 12 or month_number == 1 or month_number == 2:
-            res = "Winter"
-        elif month_number >= 3 and month_number <= 5:
-            res = "Spring"
-        elif month_number >=6 and month_number <= 8:
-            res = "Summer"
-        elif month_number >= 9 and month_number <= 11:
-            res = "Autumn"
-        else:
-            res = "Incorrect month"
-        return res
+        month = int(month_number)
+        if 1 <= month <= 12:
+            for season_name, months in seasons.items():
+                if month in months:
+                    return f"Season: {season_name}"
+            return "Invalid input"
     except ValueError:
         return "Invalid input"
- 
-print(season(1))
+
+print(season(12))
+print(season('f'))
  

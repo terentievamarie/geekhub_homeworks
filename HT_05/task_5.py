@@ -8,14 +8,13 @@
 """
 
 
-def calculator():
+def calculator(operator_1, operator_2, operation):
     result = None
-    
+
     try:
-        number_1 = int(input("Enter the first operand: "))
-        number_2 = int(input("Enter the second operand: "))
-        operation = input("Enter the operation: ")
-        
+        number_1 = int(operator_1)
+        number_2 = int(operator_2)
+
         if operation == "+":
             result = number_1 + number_2
         elif operation == "-":
@@ -41,11 +40,14 @@ def calculator():
 
         if result is not None:
             print(f"{number_1} {operation} {number_2} = {result}")
-        
+
     except ValueError:
         print("Enter an integer value, please.")
     except Exception as e:
         print(f"Oops! An error occurred: {e}")
 
-calculator()
+number_1 = input("Please, enter the first operator: ")
+number_2 = input("Please, enter the second operator: ")
+operation = input("Please, enter the operation: ")
+calculator(number_1, number_2, operation)
  
