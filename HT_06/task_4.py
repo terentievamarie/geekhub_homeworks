@@ -16,7 +16,6 @@ def is_prime(number):
             return False
     return True
 
-
 def prime_list(start, end):
     final_list = []
     for i in range(start, end + 1):

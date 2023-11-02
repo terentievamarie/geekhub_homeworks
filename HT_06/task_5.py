@@ -13,6 +13,5 @@ def fibonacci(n):
         a, b = b, a + b
     print(final_list)
 
-
 fibonacci(5)
  
