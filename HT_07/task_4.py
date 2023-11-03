@@ -29,7 +29,6 @@ def morse_code(morse_string):
     }
 
     decoded_message = []
-
     for word in morse_string.split('   '):
         decoded_word = ''
         for letter in word.split():
