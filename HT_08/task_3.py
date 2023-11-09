@@ -11,49 +11,32 @@
     9
 P.S. Повинен вертатись генератор.
 P.P.P.S Не забудьте обробляти невалідні ситуації
-(аналог range(1, 10, )).
+(аналог range(1, -10, 5)).
 Подивіться як веде себе стандартний range в таких випадках.
 """
 
 
-def my_range(*args):
-    if not len(args):
-        raise ValueError("my_range() takes at least 1 argument")
-
-    if len(args) == 1:
-        end = args[0]
-        start, step = 0, 1
-    elif len(args) == 2:
-        start, end = args
-        step = 1
-    elif len(args) == 3:
-        start, end, step = args
-    else:
-        raise ValueError("my_range() takes at most 3 arguments")
-
+def my_range(start=0, stop=None, step=1):
     if step == 0:
         raise ValueError("Step cannot be zero")
+    
+    if stop is None:
+        stop = start
+        start = 0
 
-    current_value = start
-    if start < end:
-        if step < 0:
-            raise ValueError("Step must be positive there")
-        while current_value < end:
-            yield current_value
-            current_value += step
-    elif start > end:
-        if step > 0:
-            raise ValueError("Step must be negative there")
-        while current_value > end:
-            yield current_value
-            current_value += step
-    else:
-        return
+    if (start >= stop and step > 0) or (start <= stop and step < 0):
+        return iter(())
+
+    current = start
+
+    while (step > 0 and current < stop) or (step < 0 and current > stop):
+        yield current
+        current += step
 
 
 if __name__ == '__main__':
     try:
-        for i in my_range(1, 10, -1):
+        for i in my_range(1, -10, 5):
             print(i)
     except ValueError as e:
         print(e)
