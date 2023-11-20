@@ -285,20 +285,19 @@ def deposit(username):
 
     min_nominal = min(get_nominals())
     if count % min_nominal != 0:
-        change = count % min_nominal
-        print(f"Cannot deposit {count} USD. Please enter a multiple of {min_nominal}.")
-        print(f"Returning change: {change} USD")
-        return 0.0
+        rounded_count = int(count // min_nominal) * min_nominal
+        change = count - rounded_count
+        print(f"Depositing {rounded_count} usd. Returning change: {change} USD")
+        count = rounded_count
     else:
-        if count <= get_atm_balance():
-            new_balance = get_balance(username) + count
-            update_balance(username, new_balance)
-            record_a_transaction(username, 'deposit', count)
-            return count
-        else:
-            print("Not enough funds in the ATM")
-            return 0.0
-        
+        change = 0.0
+
+    new_balance = get_balance(username) + count
+    update_balance(username, new_balance)
+    record_a_transaction(username, 'deposit', count)
+    return count
+    
+
     
 def get_nominals():
     try:
@@ -385,8 +384,9 @@ def admin_menu(username):
             no_exit = False
         elif action == '5':
             print(f"Balance in the atm: {get_quantity_of_banknotes()}")
+            print(f"Actual balance : {get_atm_balance()}")
         elif action == '6':
-            print(f"Cash handling: {cash_handling()}")
+            cash_handling()
         else:
             print('Incorrect operation.Try again')
 
@@ -442,7 +442,7 @@ def return_count_of_banknotes(nominal):
         return None   
 
 
-def update_atm_balance(nominal, count):
+def update_atm_balance_withdraw(nominal, count):
     try:
         with sl.connect(DB_DIR) as conn:
             cursor = conn.cursor()
@@ -461,6 +461,23 @@ def update_atm_balance(nominal, count):
     except sl.Error as e:
         print(f"An error occurred: {e}")
         return None
+    
+
+def update_atm_balance_deposit(nominal, count):
+    try:
+        with sl.connect(DB_DIR) as conn:
+            cursor = conn.cursor()
+
+            current_count = return_count_of_banknotes(nominal)
+
+            cursor.execute("""
+                UPDATE ATM_balance SET count = ?
+                WHERE nominal = ?
+            """, (current_count + count, nominal))
+            print(f"Deposit successful: {count} banknotes of {nominal} nominal")
+    except sl.Error as e:
+        print(f"An error occurred: {e}")
+        return None
         
 
 def cash_handling():
@@ -468,14 +485,17 @@ def cash_handling():
         with sl.connect(DB_DIR) as conn:
             cursor = conn.cursor()
 
-            no_stop = True
-            while no_stop:
-                operation = input("Please, enter a nominal and quantity of banknotes you want to withdraw: \nto exit - enter 'stop'")
-                if operation.lower() == 'stop':
-                    no_stop = False
-                else:
-                    nominal, count = map(int, operation.split())
-                    update_atm_balance(nominal, count)
+            nominal = int(input('Please enter a nominal: '))
+            operation = int(input('Please enter operation\n1 withdrawing\n2 deposit \n: '))
+
+            if operation == 1:
+                count = int(input('Please enter the quantity you want to withdraw: '))
+                update_atm_balance_withdraw(nominal, count)
+            elif operation == 2:
+                count = int(input('Please enter the quantity you want to deposit: '))
+                update_atm_balance_deposit(nominal, count)
+            else:
+                print('Incorrect operation')
 
     except sl.Error as e:
         print(f"An error occurred: {e}")
