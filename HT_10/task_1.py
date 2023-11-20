@@ -490,10 +490,16 @@ def cash_handling():
 
             if operation == 1:
                 count = int(input('Please enter the quantity you want to withdraw: '))
-                update_atm_balance_withdraw(nominal, count)
+                if count >= 0:
+                    update_atm_balance_withdraw(nominal, count)
+                else:
+                    print('Enter, please, a positive number')
             elif operation == 2:
                 count = int(input('Please enter the quantity you want to deposit: '))
-                update_atm_balance_deposit(nominal, count)
+                if count >= 0:
+                    update_atm_balance_deposit(nominal, count)
+                else:
+                    print('Enter, please, a positive number')
             else:
                 print('Incorrect operation')
 
