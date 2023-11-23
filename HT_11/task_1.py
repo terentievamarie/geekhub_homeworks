@@ -21,7 +21,7 @@
 
 class Calc:
     """
-    A class for basic arithmetic operations and tracking the previous result.
+    A class for basic arithmetic operations and tracking the last result.
 
     Attributes:
         last_result: Holds the result of the last operation. Initialized to None.
@@ -40,12 +40,12 @@ class Calc:
             y: The second number.
 
         Returns:
-            The result of previous operation x and y.
+            The result of operation x and y.
         """
         result = x + y
         self.operations.append(result)
         self.last_result = self.operations[-2]
-        return self.last_result
+        return result
 
 
     def subtract(self, x, y):
@@ -57,12 +57,12 @@ class Calc:
             y: The second number.
 
         Returns:
-            TThe result of previous operation x and y.
+            TThe result of operation x and y.
         """
         result = x - y
         self.operations.append(result)
         self.last_result = self.operations[-2]
-        return self.last_result
+        return result
 
 
     def multiply(self, x, y):
@@ -74,12 +74,12 @@ class Calc:
             y: The second number.
 
         Returns:
-            The result of previous operation x and y.
+            The result of operation x and y.
         """
         result = x * y
         self.operations.append(result)
         self.last_result = self.operations[-2]
-        return self.last_result
+        return result
 
 
     def divide(self, x, y):
@@ -91,24 +91,24 @@ class Calc:
             y: The denominator.
 
         Returns:
-            The result of previous operation x and y.
+            The result of operation x and y.
         """
         if y != 0:
             result = x / y
             self.operations.append(result)
             self.last_result = self.operations[-2]
-            return self.last_result
+            return result
         else:
             raise ValueError("Cannot divide by zero.")
 
 
 obj = Calc()
 print(obj.last_result)
-obj.add(1, 1)
+print(obj.add(1, 1))
 print(obj.last_result)
-obj.multiply(2, 3)
+print(obj.multiply(2, 3))
 print(obj.last_result)
-obj.multiply(3, 4)
+print(obj.multiply(3, 4))
 print(obj.last_result)
 obj.multiply(3, 5)
 print(obj.last_result)
