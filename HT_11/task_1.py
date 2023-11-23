@@ -40,7 +40,7 @@ class Calc:
             y: The second number.
 
         Returns:
-            The result of operation x and y.
+            The result of operation x + y.
         """
         result = x + y
         self.operations.append(result)
@@ -57,7 +57,7 @@ class Calc:
             y: The second number.
 
         Returns:
-            TThe result of operation x and y.
+            TThe result of operation x - y.
         """
         result = x - y
         self.operations.append(result)
@@ -74,7 +74,7 @@ class Calc:
             y: The second number.
 
         Returns:
-            The result of operation x and y.
+            The result of operation x * y.
         """
         result = x * y
         self.operations.append(result)
@@ -91,7 +91,7 @@ class Calc:
             y: The denominator.
 
         Returns:
-            The result of operation x and y.
+            The result of operation x / y.
         """
         if y != 0:
             result = x / y
