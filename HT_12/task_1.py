@@ -14,12 +14,12 @@ class DataBaseATM:
         self.BASE_DIR = Path(__file__).parent
         self.DB_DIR = os.path.join(self.BASE_DIR, 'ATM.db')
     
-
     def login(self, login, password):
         conn = sl.connect(self.DB_DIR)
         cursor = conn.cursor()
 
-        cursor.execute('SELECT * FROM users WHERE login = ? AND password = ?', (login, password))
+        cursor.execute("""SELECT * FROM users
+                        WHERE login = ? AND password = ?""", (login, password))
         user_data = cursor.fetchone()
 
         conn.commit()
@@ -28,7 +28,6 @@ class DataBaseATM:
         if user_data is not None:
             return True
         return False
-    
 
     def create_user(self, username, password):
         if random.random() < 0.10:
@@ -58,27 +57,28 @@ class DataBaseATM:
                 print("User with this login already exists.")
                 return False
         else:
-            print("User creation failed. Please check the validity of your username and password.")
+            print("User creation failed. "
+                  "Please check the validity of your username and password.")
             return False
         
-
     def is_user_exists(self, username):
         try:
             with sl.connect(self.DB_DIR) as conn:
                 cursor = conn.cursor()
-                cursor.execute('SELECT user_id FROM users WHERE login = ?', (username,))
+                cursor.execute("""SELECT user_id FROM users 
+                                WHERE login = ?""", (username,))
                 data = cursor.fetchone()
                 return data is not None
         except sl.Error as e:
             print(f"An error occurred: {e}")
             return False
                 
-
     def return_user_id(self, username):
         try:
             with sl.connect(self.DB_DIR) as conn:
                 cursor = conn.cursor()
-                cursor.execute('SELECT user_id FROM users WHERE login = ?', (username,))
+                cursor.execute("""SELECT user_id FROM users
+                                WHERE login = ?""", (username,))
                 data = cursor.fetchone()
                 if data is not None:
                     return data[0]
@@ -87,7 +87,6 @@ class DataBaseATM:
         except sl.Error as e:
             print(f"An error occurred: {e}")
             return None
-
 
     def create_db(self):
         conn = sl.connect(self.DB_DIR)
@@ -175,20 +174,22 @@ class DataBaseATM:
         conn.commit()
         conn.close()
 
-
     def get_balance(self, username):
         try:
             with sl.connect(self.DB_DIR) as conn:
                 cursor = conn.cursor()
                 user_id = self.return_user_id(username)
                 if user_id is not None:
-                    cursor.execute('SELECT balance FROM users_balance WHERE user_id = ?', (user_id,))
+                    cursor.execute("""SELECT balance FROM users_balance
+                                    WHERE user_id = ?""", (user_id,))
                     balance = cursor.fetchone()
 
                     if balance is not None:
                         return balance[0]
                     else:
-                        cursor.execute('INSERT INTO users_balance (user_id, balance) VALUES (?, ?)', (user_id, 0))
+                        cursor.execute("""INSERT INTO users_balance
+                                        (user_id, balance)
+                                        VALUES (?, ?)""", (user_id, 0))
                         return 0.0
                 else:
                     print("User not found.")
@@ -197,12 +198,11 @@ class DataBaseATM:
             print(f"An error occurred: {e}")
             return None       
         
-
     def get_nominals(self):
         try:
             with sl.connect(self.DB_DIR) as conn:
                 cursor = conn.cursor()
-                
+
                 cursor.execute('SELECT nominal FROM ATM_balance')
                 data = cursor.fetchall()
 
@@ -213,7 +213,6 @@ class DataBaseATM:
             print(f"An error occurred: {e}")
             return []
         
-
     def update_balance(self, username, new_balance):
         try:
             with sl.connect(self.DB_DIR) as conn:
@@ -232,7 +231,6 @@ class DataBaseATM:
             print(f"An error occurred: {e}")
             return None
         
-
     def record_a_transaction(self, username, operation, count):
         try:
             with sl.connect(self.DB_DIR) as conn:
@@ -240,7 +238,8 @@ class DataBaseATM:
                 user_id = self.return_user_id(username)
                 if user_id is not None:
                     cursor.execute("""
-                        INSERT INTO users_transactions (user_id, amount, transaction_name) 
+                        INSERT INTO users_transactions
+                        (user_id, amount, transaction_name)
                         VALUES(?, ?, ?)""", (user_id, count, operation))
                 else:
                     print("User not found.")
@@ -249,7 +248,6 @@ class DataBaseATM:
             print(f"An error occurred: {e}")
             return None    
         
-
     def get_quantity_of_banknotes(self):
         try:
             with sl.connect(self.DB_DIR) as conn:
@@ -268,12 +266,10 @@ class DataBaseATM:
             print(f"An error occurred: {e}")
             return None
         
-
     def get_atm_balance(self):
         try:
             with sl.connect(self.DB_DIR) as conn:
-                cursor = conn.cursor()
-                
+                cursor = conn.cursor()          
                 cursor.execute('SELECT nominal, count FROM ATM_balance')
                 data = cursor.fetchall()
                 result_list = [nominal * count for nominal, count in data]
@@ -281,15 +277,15 @@ class DataBaseATM:
                 return balance
         except sl.Error as e:
             print(f"An error occurred: {e}")
-            return None  
-
+            return None 
 
     def return_count_of_banknotes(self, nominal):
         try:
             with sl.connect(self.DB_DIR) as conn:
                 cursor = conn.cursor()
                 
-                cursor.execute('SELECT count FROM ATM_balance WHERE nominal = ?', (nominal,))
+                cursor.execute("""SELECT count FROM ATM_balance  
+                            WHERE nominal = ?""", (nominal,))
                 data = cursor.fetchone()
 
                 if data is not None:
@@ -299,8 +295,7 @@ class DataBaseATM:
         except sl.Error as e:
             print(f"An error occurred: {e}")
             return None   
-        
-
+    
     def update_atm_balance_withdraw(self, nominal, count):
         try:
             with sl.connect(self.DB_DIR) as conn:
@@ -313,15 +308,16 @@ class DataBaseATM:
                         UPDATE ATM_balance SET count = ?
                         WHERE nominal = ?
                     """, (current_count - count, nominal))
-                    print(f"Withdrawal successful: {count} banknotes of {nominal} nominal")
+                    print("Withdrawal successful: ", end=' ')
+                    print(f"{count} banknotes of {nominal} nominal")
                 else:
-                    print(f"Unable to withdraw {count} banknotes of {nominal} nominal. Insufficient quantity in the ATM.")
-
+                    print(f"Unable to withdraw {count} banknotes", end=' ')
+                    print(f"of {nominal} nominal.")
+                    print("Insufficient quantity in the ATM.")
         except sl.Error as e:
             print(f"An error occurred: {e}")
             return None
         
-
     def update_atm_balance_deposit(self, nominal, count):
         try:
             with sl.connect(self.DB_DIR) as conn:
@@ -333,20 +329,21 @@ class DataBaseATM:
                     UPDATE ATM_balance SET count = ?
                     WHERE nominal = ?
                 """, (current_count + count, nominal))
-                print(f"Deposit successful: {count} banknotes of {nominal} nominal")
+                print("Deposit successful: ", end='')
+                print(f"{count} banknotes of {nominal} nominal")
         except sl.Error as e:
             print(f"An error occurred: {e}")
             return None
-    
+
 
 class ATM:
     def __init__(self):
         self.db = DataBaseATM()
-        self.nominals = [1000, 500, 200, 100, 50, 20 ,10]
+        self.nominals = [1000, 500, 200, 100, 50, 20, 10]
         self.counts = {
             100: 10,
             50: 10,
-            20:10,
+            20: 10,
             10: 0
         }
 
@@ -358,11 +355,11 @@ class ATM:
         #     20: 6,
         #     10: 0
         # }
-        
+ 
         # Третій варіант
         # self.counts = {
         #     1000: 5,
-        #     500: 1, 
+        #     500: 1,   
         #     200: 4, 
         #     100: 0, 
         #     50: 1, 
@@ -385,7 +382,8 @@ class ATM:
                         self.menu(username)
                     return
                 else:
-                    print(f"Incorrect username or password. Remaining attempts: {2 - i}")
+                    print("Incorrect username or password.")
+                    print(f"Remaining attempts: {2 - i}")
                     i += 1
         elif is_login == '2':
             username = input("Please, create your login: ")
@@ -397,12 +395,16 @@ class ATM:
             print("Invalid input. Please enter 1 or 2.")
             return
     
-
-    def menu(self,username):
+    def menu(self, username):
         no_exit = True
         
         while no_exit:
-            action = input("Please, enter your action: \n1 (Check balance) \n2 (Аccount replenishment)\n3 (Withdraw money from the account)\n4 (Exit)")
+            action = input(
+                            "Please, enter your action: \n"
+                            "1 (Check balance) \n"
+                            "2 (Аccount replenishment)\n"
+                            "3 (Withdraw money from the account)\n"
+                            "4 (Exit)")
             if action == '1':
                 print(f"Your balance: {self.db.get_balance(username)}")
             elif action == '2':
@@ -414,7 +416,6 @@ class ATM:
                 no_exit = False
             else:
                 print('Incorrect operation.Try again')
-
 
     @staticmethod
     def is_valid_user(username, password):
@@ -429,10 +430,10 @@ class ATM:
         special_symbols = ['!', '#', '.']
 
         if not any(char in special_symbols for char in password):
-            print("Password must contain at least one special symbol from {! # .}")
+            print("Password must contain at least ", end=' ')
+            print("one special symbol from {! # .}")
             return False
         return True
-    
 
     @staticmethod
     def is_count_valid(count):
@@ -443,7 +444,6 @@ class ATM:
             return False
         except ValueError as e:
             print(e)
-
 
     def deposit(self, username):
         count = input("How much do you want to deposit into your account? ")
@@ -457,7 +457,8 @@ class ATM:
         if count % min_nominal != 0:
             rounded_count = int(count // min_nominal) * min_nominal
             change = count - rounded_count
-            print(f"Depositing {rounded_count} usd. Returning change: {change} USD")
+            print(f"Depositing {rounded_count} usd. ", end='')
+            print(f"Returning change: {change} USD")
             count = rounded_count
         else:
             change = 0.0
@@ -466,10 +467,10 @@ class ATM:
         self.db.update_balance(username, new_balance)
         self.db.record_a_transaction(username, 'deposit', count)
         return count
-    
 
     def withdraw(self, username):
-        count_str = input("How much would you like to withdraw from your balance? ")
+        count_str = input("How much would you like"
+                          "to withdraw from your balance? ")
 
         try:
             count = int(count_str)
@@ -477,7 +478,8 @@ class ATM:
             print("Invalid input. Please enter a valid integer.")
             return False
 
-        combinations = self.generate_combinations(count, self.nominals, self.counts)
+        combinations = self.generate_combinations(count, self.nominals,
+                                                  self.counts)
         smallest_combination = self.combination_with_smallest_banknotes(combinations)
 
         if not self.is_count_valid(count):
@@ -500,15 +502,17 @@ class ATM:
             for denomination, count in smallest_combination.items():
                 print(f"{denomination} x {count}")
 
-            self.db.record_a_transaction(username, 'withdrawing', target_amount)
+            self.db.record_a_transaction(username,
+                                         'withdrawing',
+                                         target_amount)
 
             return count_str
 
         print("No bills")
         return 0.0
 
-
-    def generate_combinations(self, amount, denominations, limits, current_combination=None):
+    def generate_combinations(self, amount, denominations, limits,
+                              current_combination=None):
         if current_combination is None:
             current_combination = []
         if amount == 0:
@@ -520,11 +524,13 @@ class ATM:
                 remaining_denominations = denominations[i:]
                 new_limits = limits.copy()
                 new_limits[denom] -= 1
-                combinations += self.generate_combinations(amount - denom, remaining_denominations, new_limits, current_combination + [denom])
-
+                combinations += self.generate_combinations(
+                    amount - denom, remaining_denominations,
+                    new_limits,
+                    current_combination + [denom]
+                )
         return combinations
     
-
     def combination_with_smallest_banknotes(self, combinations):
         if len(combinations) == 0:
             return None
@@ -534,12 +540,19 @@ class ATM:
                 smallest = combination
         return {note: smallest.count(note) for note in set(smallest)}
     
-
     def admin_menu(self, username):
         no_exit = True
         
         while no_exit:
-            action = input("Please, enter your action: \n1 (Check your balance) \n2 (Аccount replenishment)\n3 (Withdraw money from the account)\n4 (Exit)\n5 (Check quantity of banknotes in the atm)\n6 (cash handling)")
+            action = input(
+                "Please, enter your action: \n"
+                "1 (Check your balance) \n"
+                "2 (Аccount replenishment)\n"
+                "3 (Withdraw money from the account)\n"
+                "4 (Exit)\n"
+                "5 (Check quantity of banknotes in the atm)\n"
+                "6 (Cash handling)"
+            )
             if action == '1':
                 print(f"Your balance: {self.db.get_balance(username)}")
             elif action == '2':
@@ -550,27 +563,33 @@ class ATM:
                 print("You have successfully logged out.")
                 no_exit = False
             elif action == '5':
-                print(f"Balance in the atm: {self.db.get_quantity_of_banknotes()}")
+                print("Balance in the atm: ")
+                print(f"{self.db.get_quantity_of_banknotes()}")
                 print(f"Actual balance : {self.db.get_atm_balance()}")
             elif action == '6':
                 self.cash_handling()
             else:
                 print('Incorrect operation.Try again')
 
-
     def cash_handling(self):
         try:
             nominal = int(input('Please enter a nominal: '))
-            operation = int(input('Please enter operation\n1 withdrawing\n2 deposit \n: '))
+            operation = int(input(
+                "Please enter operation\n"
+                "1 withdrawing \n"
+                "2 deposit \n: \n"
+                "\n: "))
 
             if operation == 1:
-                count = int(input('Please enter the quantity you want to withdraw: '))
+                count = int(input(
+                            "Please enter the quantity "
+                            "you want to withdraw: "))
                 if count >= 0:
                     self.db.update_atm_balance_withdraw(nominal, count)
                 else:
                     print('Enter, please, a positive number')
             elif operation == 2:
-                count = int(input('Please enter the quantity you want to deposit: '))
+                count = int(input('Enter the quantity to deposit: '))
                 if count >= 0:
                     self.db.update_atm_balance_deposit(nominal, count)
                 else:
@@ -582,11 +601,10 @@ class ATM:
         except sl.Error as e:
             print(f"An error occurred: {e}")
             return None
-        
+       
 
 if __name__ == '__main__':
     database = DataBaseATM()
     database.create_db()
     atm = ATM()
     atm.start()
- 
