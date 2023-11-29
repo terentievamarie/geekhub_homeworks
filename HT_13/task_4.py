@@ -21,7 +21,7 @@ class MyList:
 
     def __repr__(self):
         return repr(self.data)
-    
+ 
 
 my_list = MyList([10, 20, 30])
 print(my_list) 

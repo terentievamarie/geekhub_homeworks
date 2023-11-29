@@ -6,9 +6,11 @@
 
 class MyClass:
     counter = 0
+
     def __init__(self, name):
         self.name = name
         MyClass.counter += 1
+
 
 person_1 = MyClass('Masha')
 print(person_1.counter)
