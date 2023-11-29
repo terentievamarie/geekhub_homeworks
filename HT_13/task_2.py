@@ -24,17 +24,19 @@ class Teacher(Person):
         self.subject = subject
 
     def __str__(self):
-        return f"Name: {self.name}, Surname: {self.surname}, Teacher of {self.subject}"
-    
+        return f"Name: {self.name}" \
+                f"Surname: {self.surname}, Teacher of {self.subject}"
 
+    
 class Student(Person):
     def __init__(self, name, surname, grade):
         super().__init__(name, surname)
         self.grade = grade
 
     def __str__(self):
-        return f"Name: {self.name}, Surname: {self.surname}, Student grade: {self.grade}"
-    
+        return f"Name: {self.name}" \
+                f"Surname: {self.surname}, Student grade: {self.grade}"
+  
 
 class Author:
     def __init__(self, author_name, authors_bd):
@@ -53,7 +55,8 @@ class Shelf:
 
     def __str__(self):
         return f"Bookcase name: {self.bookcase_name}, " \
-               f"shelf number: {self.shelf_number}, book number at left: {self.left_number} "
+               f"shelf number: {self.shelf_number}, " \
+               f"book number at left: {self.left_number}"
 
 
 class Category:
@@ -65,7 +68,7 @@ class Category:
 
 
 class Book:
-    def __init__(self, name, author:Author, shelf:Shelf, category:Category):
+    def __init__(self, name, author: Author, shelf: Shelf, category: Category):
         self.name = name
         self.author = author
         self.shelf = shelf
@@ -75,7 +78,6 @@ class Book:
         return f"{self.name} lays on the {self.shelf} shelf. " \
                f"Author is {self.author}, category: {self.category} "
 
- 
 
 class LibraryDB:
     def __init__(self):
@@ -179,8 +181,9 @@ class LibraryDB:
         cursor = conn.cursor()
 
         cursor.execute("""
-            SELECT user_id FROM users 
-            WHERE name = ? AND surname = ? AND is_librarian = ? AND is_teacher = ?
+            SELECT user_id FROM users
+            WHERE name = ? AND surname = ?
+            AND is_librarian = ? AND is_teacher = ?
         """, (name, surname, is_librarian, is_teacher))
 
         result = cursor.fetchone()
@@ -210,7 +213,8 @@ class LibraryDB:
 
         if not self.user_exists(user.name, user.surname, 0, 0):
             cursor.execute("""
-                INSERT OR IGNORE INTO users (name, surname, is_librarian, is_teacher)
+                INSERT OR IGNORE INTO users 
+                (name, surname, is_librarian, is_teacher)
                 VALUES (?, ?, ?, ?)""", (user.name, user.surname, 0, 0))
             conn.commit()
             print(f"User {user.name} {user.surname} added to the database.")
@@ -231,20 +235,21 @@ class LibraryDB:
             existing_author = cursor.fetchone()
         
             if not existing_author:
-                cursor.execute("""INSERT OR IGNORE INTO authors (author_name, authors_bd) 
+                cursor.execute("""
+                               INSERT OR IGNORE INTO authors (author_name, authors_bd) 
                                VALUES (?, ?)""",
-                            (book.author.author_name, book.author.authors_bd))
+                               (book.author.author_name, book.author.authors_bd))
                 conn.commit()
 
             cursor.execute("""SELECT * FROM shelves 
                            WHERE bookcase_name = ? AND shelf_number = ?""",
-                        (book.shelf.bookcase_name, book.shelf.shelf_number))
+                           (book.shelf.bookcase_name, book.shelf.shelf_number))
             existing_shelf = cursor.fetchone()
 
             if not existing_shelf:
-                cursor.execute("""INSERT OR IGNORE INTO shelves (bookcase_name, shelf_number, left_number) 
-                               VALUES (?, ?, ?)""",
-                            (book.shelf.bookcase_name, book.shelf.shelf_number, book.shelf.left_number))
+                cursor.execute("""
+                    INSERT OR IGNORE INTO shelves (bookcase_name, shelf_number, left_number) 
+                    VALUES (?, ?, ?)""", (book.shelf.bookcase_name, book.shelf.shelf_number, book.shelf.left_number))
                 conn.commit()
 
             cursor.execute("""SELECT * FROM categories 
@@ -259,10 +264,10 @@ class LibraryDB:
             try:
                 cursor.execute("""
                     INSERT OR IGNORE INTO books (book_name, author, category, shelf)
-                    VALUES (?, ?, ?, ?)""", 
+                    VALUES (?, ?, ?, ?)""",
                     (book.name, book.author.author_name, book.category.category_name, 
-                    f"{book.shelf.bookcase_name}-{book.shelf.shelf_number}"))
-
+                    f"{book.shelf.bookcase_name}-{book.shelf.shelf_number}")
+                )
                 conn.commit()
                 print(f"Book '{book.name}' added to the database.")
             except sl.IntegrityError:
@@ -271,7 +276,6 @@ class LibraryDB:
             print(f"Book '{book.name}' already exists in the database.")
 
         conn.close()
-
 
     def borrow_book(self, user_id, book_id):
         conn = sl.connect(self.DB_DIR)
@@ -375,7 +379,9 @@ if __name__ == '__main__':
     library_db.add_book(book)
 
     alice_id = library_db.get_user_id_by_name("Alice", "Smith")
-    harry_potter_id = library_db.get_book_id_by_name("Harry Potter and the Sorcerer's Stone")
+    harry_potter_id = library_db.get_book_id_by_name(
+        "Harry Potter and the Sorcerer's Stone"
+    )
 
     library_db.borrow_book(2, 1)
     library_db.borrow_book(alice_id, 1)
