@@ -1,396 +1,228 @@
-"""
-2. Створіть за допомогою класів та продемонструйте 
-свою реалізацію шкільної бібліотеки (включіть фантазію). 
-Наприклад вона може містити класи 
-Person, Teacher, Student, Book, Shelf, Author, Category і.т.д.
-"""
+# """
+# 2. Створіть за допомогою класів та продемонструйте 
+# свою реалізацію шкільної бібліотеки (включіть фантазію). 
+# Наприклад вона може містити класи 
+# Person, Teacher, Student, Book, Shelf, Author, Category і.т.д.
+# """
+# from pathlib import Path
+# import os
+# import sqlite3 as sl
+
 from pathlib import Path
 import os
 import sqlite3 as sl
+from datetime import datetime
+
+BASE_DIR = Path(__file__).parent
+DB_DIR = os.path.join(BASE_DIR, 'library.db')
 
 
-class Person:
-    def __init__(self, name, surname):
-        self.name = name
-        self.surname = surname
+class Librarian:
+    def __init__(self, db):
+        self.conn = sl.connect(db)
+        self.cursor = self.conn.cursor()
 
-    def __str__(self):
-        return f"Name: {self.name}, Surname: {self.surname}"
-    
-
-class Teacher(Person):
-    def __init__(self, name, surname, subject):
-        super().__init__(name, surname)
-        self.subject = subject
-
-    def __str__(self):
-        return f"Name: {self.name}" \
-                f"Surname: {self.surname}, Teacher of {self.subject}"
-
-    
-class Student(Person):
-    def __init__(self, name, surname, grade):
-        super().__init__(name, surname)
-        self.grade = grade
-
-    def __str__(self):
-        return f"Name: {self.name}" \
-                f"Surname: {self.surname}, Student grade: {self.grade}"
-  
-
-class Author:
-    def __init__(self, author_name, authors_bd):
-        self.author_name = author_name
-        self.authors_bd = authors_bd
-
-    def __str__(self):
-        return f"Author: {self.author_name}, Birthdate: {self.authors_bd}"
-   
-
-class Shelf:
-    def __init__(self, bookcase_name, shelf_number, left_number):
-        self.bookcase_name = bookcase_name
-        self.shelf_number = shelf_number
-        self.left_number = left_number
-
-    def __str__(self):
-        return f"Bookcase name: {self.bookcase_name}, " \
-               f"shelf number: {self.shelf_number}, " \
-               f"book number at left: {self.left_number}"
-
-
-class Category:
-    def __init__(self, category_name):
-        self.category_name = category_name
-
-    def __str__(self):
-        return f"Category name is {self.category_name}"
-
-
-class Book:
-    def __init__(self, name, author: Author, shelf: Shelf, category: Category):
-        self.name = name
-        self.author = author
-        self.shelf = shelf
-        self.category = category
-
-    def __str__(self):
-        return f"{self.name} lays on the {self.shelf} shelf. " \
-               f"Author is {self.author}, category: {self.category} "
-
-
-class LibraryDB:
-    def __init__(self):
-        self.BASE_DIR = Path(__file__).parent
-        self.DB_DIR = os.path.join(self.BASE_DIR, 'Library.db')
-
-    def create_db(self):
-        conn = sl.connect(self.DB_DIR)
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                surname TEXT NOT NULL,
-                is_librarian INTEGER DEFAULT 0,
-                is_teacher INTEGER DEFAULT 0,
-                UNIQUE(name, surname) ON CONFLICT IGNORE
-            );
+    def create_tables(self):
+        """
+        Creates the necessary tables in the database if they do not exist.
+        """
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS students (
+                student_id INTEGER PRIMARY KEY,
+                student_first_name TEXT NOT NULL,
+                student_last_name TEXT NOT NULL,
+                student_grade TEXT NOT NULL,
+                school_student_id INTEGER UNIQUE NOT NULL
+            )
         """)
 
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS teachers (
-                teacher_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER UNIQUE,
-                subject TEXT NOT NULL,
-                FOREIGN KEY (user_id) REFERENCES users(user_id)
-            );
-        """)
-
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS authors (
-                author_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                author_name TEXT NOT NULL,
-                authors_bd TEXT NOT NULL,
-                UNIQUE(author_name)
-            );
-        """)
-
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS shelves (
-                shelf_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                bookcase_name TEXT NOT NULL,
-                shelf_number INTEGER NOT NULL,
-                left_number INTEGER NOT NULL,
-                UNIQUE(bookcase_name, shelf_number)
-            );
-        """)
-
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS categories (
-                category_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                category_name TEXT NOT NULL
-            );
-        """)
-
-        cursor.execute("""
+        self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS books (
-                book_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                book_id INTEGER PRIMARY KEY,
                 book_name TEXT NOT NULL,
-                author_id INTEGER NOT NULL,
+                book_author TEXT NOT NULL,
+                is_book_taken TEXT NOT NULL,
+                shelf INTEGER NOT NULL,
                 category_id INTEGER NOT NULL,
-                shelf_id INTEGER NOT NULL,
-                UNIQUE(book_name, author_id),
-                FOREIGN KEY (author_id) REFERENCES authors(author_id),
-                FOREIGN KEY (category_id) REFERENCES categories(category_id),
-                FOREIGN KEY (shelf_id) REFERENCES shelves(shelf_id)
-            );
+                FOREIGN KEY (category_id) REFERENCES book_categories (category_id)
+            )
         """)
 
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS user_books (
-                user_id INTEGER,
-                book_id INTEGER,
-                PRIMARY KEY (user_id, book_id),
-                FOREIGN KEY (user_id) REFERENCES users(user_id),
-                FOREIGN KEY (book_id) REFERENCES books(book_id)
-            );
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS borrowed_books (
+                return_id INTEGER PRIMARY KEY,
+                return_date TEXT NOT NULL,
+                student_id INTEGER NOT NULL,
+                book_id INTEGER NOT NULL,
+                FOREIGN KEY (student_id) REFERENCES students (student_id),
+                FOREIGN KEY (book_id) REFERENCES books (book_id)
+            )
         """)
 
-        conn.commit()
-        conn.close()
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS book_categories (
+                category_id INTEGER PRIMARY KEY,
+                category_name TEXT NOT NULL
+            )
+        """)
 
-    def get_user_id_by_name(self, name, surname):
-        conn = sl.connect(self.DB_DIR)
-        cursor = conn.cursor()
+        self.conn.commit()
 
-        cursor.execute("""
-            SELECT user_id FROM users 
-            WHERE name = ? AND surname = ?
-        """, (name, surname))
-
-        result = cursor.fetchone()
-
-        conn.close()
-
-        return result[0] if result else None
-    
-    def user_exists(self, name, surname, is_librarian, is_teacher):
-        conn = sl.connect(self.DB_DIR)
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT user_id FROM users
-            WHERE name = ? AND surname = ?
-            AND is_librarian = ? AND is_teacher = ?
-        """, (name, surname, is_librarian, is_teacher))
-
-        result = cursor.fetchone()
-
-        conn.close()
-
-        return True if result else False
-    
-    def get_book_id_by_name(self, name):
-        conn = sl.connect(self.DB_DIR)
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT book_id FROM books 
-            WHERE book_name = ? 
-        """, (name, ))
-
-        user_id = cursor.fetchone()
-
-        conn.close()
-
-        return user_id[0] if user_id else None
-
-    def add_user(self, user):
-        conn = sl.connect(self.DB_DIR)
-        cursor = conn.cursor()
-
-        if not self.user_exists(user.name, user.surname, 0, 0):
-            cursor.execute("""
-                INSERT OR IGNORE INTO users 
-                (name, surname, is_librarian, is_teacher)
-                VALUES (?, ?, ?, ?)""", (user.name, user.surname, 0, 0))
-            conn.commit()
-            print(f"User {user.name} {user.surname} added to the database.")
-        else:
-            print(f"User {user.name} {user.surname} already exists in the database.")
-
-        conn.close()
-
-    def add_book(self, book):
-        conn = sl.connect(self.DB_DIR)
-        cursor = conn.cursor()
-
-        existing_book_id = self.get_book_id_by_name(book.name)
-
-        if existing_book_id is None:
-            cursor.execute("""SELECT * FROM authors 
-                           WHERE author_name = ?""", (book.author.author_name,))
-            existing_author = cursor.fetchone()
+    def student_registration(self, first_name, last_name, student_grade, school_student_id):
+        """
+        Registers a new student in the system.
+        """
+        self.cursor.execute("INSERT INTO students (student_first_name, student_last_name, student_grade, "
+                            "school_student_id) VALUES (?, ?, ?, ?)",
+                            (first_name, last_name, student_grade, school_student_id))
         
-            if not existing_author:
-                cursor.execute("""
-                               INSERT OR IGNORE INTO authors (author_name, authors_bd) 
-                               VALUES (?, ?)""",
-                               (book.author.author_name, book.author.authors_bd))
-                conn.commit()
+        self.conn.commit()
 
-            cursor.execute("""SELECT * FROM shelves 
-                           WHERE bookcase_name = ? AND shelf_number = ?""",
-                           (book.shelf.bookcase_name, book.shelf.shelf_number))
-            existing_shelf = cursor.fetchone()
+        print(f'{first_name} {last_name} is successfully registered.')
 
-            if not existing_shelf:
-                cursor.execute("""
-                    INSERT OR IGNORE INTO shelves (bookcase_name, shelf_number, left_number) 
-                    VALUES (?, ?, ?)""", (book.shelf.bookcase_name, book.shelf.shelf_number, book.shelf.left_number))
-                conn.commit()
+    def is_student_exists(self, school_student_id):
+        try:
+            self.cursor.execute("""
+                        SELECT school_student_id
+                        FROM students
+                        WHERE school_student_id = ?
+                    """, (school_student_id,))
+            data = self.cursor.fetchone()
+            return data is not None
+        except sl.Error as e:
+            print(f"An error occurred: {e}")
+            return False
 
-            cursor.execute("""SELECT * FROM categories 
-                           WHERE category_name = ?""", (book.category.category_name,))
-            existing_category = cursor.fetchone()
-
-            if not existing_category:
-                cursor.execute("""INSERT OR IGNORE INTO categories (category_name) 
-                               VALUES (?)""", (book.category.category_name,))
-                conn.commit()
-
-            try:
-                cursor.execute("""
-                    INSERT OR IGNORE INTO books (book_name, author, category, shelf)
-                    VALUES (?, ?, ?, ?)""",
-                    (book.name, book.author.author_name, book.category.category_name, 
-                    f"{book.shelf.bookcase_name}-{book.shelf.shelf_number}")
-                )
-                conn.commit()
-                print(f"Book '{book.name}' added to the database.")
-            except sl.IntegrityError:
-                print(f"Book '{book.name}' already exists in the database.")
+    def delete_student(self, student_id):
+        self.cursor.execute("SELECT student_first_name FROM students WHERE student_id = ?", (student_id,))
+        student_first_name = self.cursor.fetchone()
+        self.cursor.execute("SELECT student_last_name FROM students WHERE student_id = ?", (student_id,))
+        student_last_name = self.cursor.fetchone()
+        if student_first_name and student_first_name[0]:
+            self.cursor.execute("DELETE FROM students WHERE student_id = ?", (student_id,))
+            self.conn.commit()
+            print(f"Student: {student_first_name[0]} {student_last_name[0]} deleted")
         else:
-            print(f"Book '{book.name}' already exists in the database.")
+            print(f"Error: Library doesn't have this student yet")
 
-        conn.close()
+    def add_book(self, book_name, book_author, is_book_taken, shelf, category_id):
+        self.cursor.execute("""
+                            INSERT INTO books (book_name, book_author, is_book_taken, shelf, category_id)
+                            VALUES (?, ?, ?, ?, ?)""",
+                            (book_name, book_author, is_book_taken, shelf, category_id))
+        
+        self.conn.commit()
+        print(f"{book_name} added to the library")
 
-    def borrow_book(self, user_id, book_id):
-        conn = sl.connect(self.DB_DIR)
-        cursor = conn.cursor()
+    def delete_book(self, book_id):
+        self.cursor.execute("""
+            DELETE FROM books
+            WHERE book_id = ?
+        """, (book_id,))
+        self.conn.commit()
+        print(f"Book with ID {book_id} deleted from the library")
 
-        cursor.execute("""
-            SELECT * FROM user_books
-            WHERE user_id = ? AND book_id = ?
-        """, (user_id, book_id))
+    def return_book_information(self, book_id):
+        self.cursor.execute("""SELECT * FROM books
+                            WHERE book_id = ?""", (book_id,))
+        data = self.cursor.fetchall()
+        return data
+                    
+    def borrow_book(self, student_id, book_id):
+        self.cursor.execute("""SELECT is_book_taken FROM books
+                    WHERE book_id = ?""", (book_id,))
+        is_available = self.cursor.fetchone()
+        
+        if is_available and is_available[0] == 'available':
+            self.cursor.execute("""UPDATE books SET is_book_taken = 'borrowed'
+                                WHERE book_id = ?""", (book_id,))
+            self.cursor.execute("""INSERT INTO borrowed_books (return_date, student_id, book_id)
+                                VALUES (?, ?, ?)""", (datetime.now(), student_id, book_id))
+            self.conn.commit()
 
-        existing_entry = cursor.fetchone()
-
-        if not existing_entry:
-            cursor.execute("""
-                INSERT INTO user_books (user_id, book_id)
-                VALUES (?, ?)""", (user_id, book_id))
-            conn.commit()
-            print("Book borrowed successfully.")
+            print(f"{self.return_book_information(book_id)} borrowed")
         else:
-            print("This book is already borrowed by the user.")
+            print('this student cannot borrow this book')
 
-        conn.close()
+    def pass_the_book(self, student_id, book_id):
+        self.cursor.execute("SELECT is_book_taken FROM books WHERE book_id = ?", (book_id,))
+        is_available = self.cursor.fetchone()
+        if is_available and is_available[0] == 'borrowed':
+            self.cursor.execute("""UPDATE books SET is_book_taken = 'available' 
+                                WHERE book_id = ?""", (book_id,))
+            self.cursor.execute("INSERT INTO borrowed_books (return_date, student_id, book_id) VALUES (?, ?, ?)",
+                                (datetime.now(), student_id, book_id))
+            
+            self.conn.commit()
+            print(f"{self.return_book_information(book_id)} passed.")
+        else:
+            print("The book was not borrowed")
 
-    def is_book_borrowed(self, user_id, book_id):
-        conn = sl.connect(self.DB_DIR)
-        cursor = conn.cursor()
+    def show_all_books(self):
+        self.cursor.execute("SELECT * FROM books")
+        all_books = self.cursor.fetchall()
 
-        cursor.execute("""
-            SELECT * FROM user_books 
-            WHERE user_id = ? AND book_id = ?
-        """, (user_id, book_id))
+        if all_books:
+            print("\nList of all books in the library:")
+            for book in all_books:
+                print(f"Book ID: {book[0]}, Name: {book[1]}, Author: {book[2]}, Status: {book[3]}, Shelf: {book[4]}, Category ID: {book[5]}")
+        else:
+            print("The library is currently empty.")
 
-        result = cursor.fetchone()
+    def show_students(self):
+        self.cursor.execute("SELECT * FROM students")
+        students = self.cursor.fetchall()
 
-        conn.close()
+        if students:
+            print("List of students:")
+            for student in students:
+                print(f"ID: {student[0]}, Name: {student[1]} {student[2]}, Grade: {student[3]}, Student ID: {student[4]}")
+        else:
+            print("No students found in the library.")
+        
+    def menu(self):
+        no_exit = True
 
-        return True if result else False
-    
-    def get_borrowed_books(self, user_id):
-        conn = sl.connect(self.DB_DIR)
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT b.book_name, b.author, b.category, b.shelf
-            FROM user_books ub
-            JOIN books b ON ub.book_id = b.book_id
-            WHERE ub.user_id = ?
-        """, (user_id,))
-
-        borrowed_books = cursor.fetchall()
-
-        conn.close()
-
-        return borrowed_books
-
-    def show_users(self):
-        conn = sl.connect(self.DB_DIR)
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT * FROM users
-        """)
-        users = cursor.fetchall()
-
-        for user in users:
-            print(f"User ID: {user[0]}, Name: {user[1]}", end=', ')
-            print(f"Surname: {user[2]}, Librarian: {user[3]}, Teacher: {user[4]}")
-
-        conn.close()
-
-    def show_books(self):
-        conn = sl.connect(self.DB_DIR)
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT * FROM books
-        """)
-        books = cursor.fetchall()
-
-        for book in books:
-            print(f"Book ID: {book[0]}, Name: {book[1]}", end='')
-            print(f"Author: {book[2]}, Category: {book[3]}, Shelf: {book[4]}")
-
-        conn.close()
+        while no_exit:
+            action = input("Please, enter your action: \n1 add book \n2 delete book \n3 borrow the book \n4 pass the book \n5 register the student \n6 show books \n7 show students \n8 exit \n:")
+            if action == '1':
+                book_name = input("Please, enter book's name:")
+                book_author = input("Please, enter book's author:")
+                is_book_taken = input('enter available/borrowed: ')
+                shelf = input("Please, enter shelf: ")
+                category_id = input("Enter a category ID: ")
+                self.add_book(book_name, book_author, is_book_taken, shelf, category_id)
+            elif action == '2':
+                book_id = input('Please, enter book_id: ')
+                self.delete_book(book_id)
+            elif action == '3':
+                student_id = int(input('Enter student ID:'))
+                book_id = input('Please, enter book_id: ')
+                self.borrow_book(student_id, book_id)
+            elif action == '4':
+                student_id = int(input('Enter student ID:'))
+                if self.is_student_exists(student_id):
+                    book_id = input('Please, enter book_id: ')
+                    self.pass_the_book(student_id, book_id)
+                else:
+                    print("No this student in the database")
+            elif action == '5':
+                first_name = input("Enter students name: ")
+                last_name = input("Enter the student's last name: ")
+                student_grade = input("Enter student grade: ")
+                school_student_id = input("Enter student ID: ")
+                self.student_registration(first_name, last_name, student_grade, school_student_id)
+            elif action == '6':
+                self.show_all_books()
+            elif action == '7':
+                self.show_students()
+            elif action == '8':
+                print("You left the library")
+                no_exit = False
 
 
 if __name__ == '__main__':
-    library_db = LibraryDB()
-    library_db.create_db()
-
-    new_teacher = Teacher("John", "Doe", "Math")
-    new_student = Student("Alice", "Smith", 10)
-    library_db.add_user(new_teacher)
-    library_db.add_user(new_student)
-
-    book_author = Author("J.K. Rowling", "31.07.1965")
-    book_shelf = Shelf("Fantasy Section", 1, 10)
-    book_category = Category("Fantasy")
-    book = Book("Harry Potter and the Sorcerer's Stone", 
-                book_author, book_shelf, book_category)
-    library_db.add_book(book)
-
-    alice_id = library_db.get_user_id_by_name("Alice", "Smith")
-    harry_potter_id = library_db.get_book_id_by_name(
-        "Harry Potter and the Sorcerer's Stone"
-    )
-
-    library_db.borrow_book(2, 1)
-    library_db.borrow_book(alice_id, 1)
-
-    borrowed_books = library_db.get_borrowed_books(alice_id)
-    print(f"Borrowed books for user with ID {alice_id}: {borrowed_books}")
-    print("----------------------")
-
-    library_db.show_users()
-    print("----------------------")
-    library_db.show_books()
+    librarian = Librarian(DB_DIR)
+    librarian.create_tables()
+    librarian.menu()
  
