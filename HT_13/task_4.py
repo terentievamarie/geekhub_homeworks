@@ -22,6 +22,9 @@ class MyList(list):
         except IndexError as e:
             print(f"Error: {e}")           
     
+    def insert(self, index, value):
+        super().insert(index - 1, value)
+
 
 my_list = MyList([10, 20, 30, 40])
 print(my_list)
@@ -31,4 +34,10 @@ print(my_list[1:])
 print(len(my_list))
 for i in my_list:
     print(i * 2)
-
+my_list.pop()
+print(my_list)
+my_list.append(40)
+print(sum(my_list))
+my_list.insert(1, 14)
+print(my_list)
+ 
