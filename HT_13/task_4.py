@@ -9,19 +9,13 @@ but index starts from 1 and index of 0 raises error.
 
 class MyList(list):
     def __getitem__(self, index):
-        try:
-            if isinstance(index, slice):
-                start, stop, step = index.start, index.stop, index.step
-                start = max(1, start) if start is not None else 1
-                stop = max(1, stop) if stop is not None else len(self) 
-                step = step or 1
-                return super().__getitem__(slice(start - 1, stop - 1, index.step))
-            if index < 1:
-                raise IndexError('negative (or zero) index is not allowed. Index starts from 1!')
-            return super().__getitem__(index - 1)
-        except IndexError as e:
-            print(f"Error: {e}")           
-    
+        if isinstance(index, slice):
+            return [self[i] for i in range(*index.indices(len(self)))]
+        
+        if index < 1:
+            raise IndexError('Negative (or zero) index is not allowed')
+        return super().__getitem__(index - 1)
+        
     def insert(self, index, value):
         super().insert(index - 1, value)
 
