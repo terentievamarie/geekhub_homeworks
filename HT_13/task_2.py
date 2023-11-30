@@ -4,9 +4,6 @@
 # Наприклад вона може містити класи 
 # Person, Teacher, Student, Book, Shelf, Author, Category і.т.д.
 # """
-# from pathlib import Path
-# import os
-# import sqlite3 as sl
 
 from pathlib import Path
 import os
@@ -17,15 +14,34 @@ BASE_DIR = Path(__file__).parent
 DB_DIR = os.path.join(BASE_DIR, 'library.db')
 
 
-class Librarian:
-    def __init__(self, db):
-        self.conn = sl.connect(db)
+class Person:
+    def __init__(self, first_name, last_name):
+        self.first_name = first_name
+        self.last_name = last_name
+
+
+class Student(Person):
+    def __init__(self, first_name, last_name, grade, student_id):
+        super().__init__(first_name, last_name)
+        self.grade = grade
+        self.student_id = student_id
+
+
+class Book:
+    def __init__(self, name, author, status, shelf, category_id):
+        self.name = name
+        self.author = author
+        self.status = status
+        self.shelf = shelf
+        self.category_id = category_id
+
+
+class LibraryDatabase:
+    def __init__(self, db_file):
+        self.conn = sl.connect(db_file)
         self.cursor = self.conn.cursor()
 
     def create_tables(self):
-        """
-        Creates the necessary tables in the database if they do not exist.
-        """
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS students (
                 student_id INTEGER PRIMARY KEY,
@@ -68,99 +84,102 @@ class Librarian:
 
         self.conn.commit()
 
-    def student_registration(self, first_name, last_name, student_grade, school_student_id):
-        """
-        Registers a new student in the system.
-        """
-        self.cursor.execute("INSERT INTO students (student_first_name, student_last_name, student_grade, "
-                            "school_student_id) VALUES (?, ?, ?, ?)",
-                            (first_name, last_name, student_grade, school_student_id))
-        
-        self.conn.commit()
 
-        print(f'{first_name} {last_name} is successfully registered.')
+class Librarian:
+    def __init__(self, db):
+        self.db = db
+
+    def student_registration(self, student):
+        self.db.cursor.execute("INSERT INTO students (student_first_name, student_last_name, student_grade, "
+                            "school_student_id) VALUES (?, ?, ?, ?)",
+                            (student.first_name, student.last_name, student.grade, student.student_id))
+        
+        self.db.conn.commit()
+
+        print(f'{student.first_name} {student.last_name} is successfully registered.')
 
     def is_student_exists(self, school_student_id):
         try:
-            self.cursor.execute("""
+            self.db.cursor.execute("""
                         SELECT school_student_id
                         FROM students
                         WHERE school_student_id = ?
                     """, (school_student_id,))
-            data = self.cursor.fetchone()
+            data = self.db.cursor.fetchone()
             return data is not None
         except sl.Error as e:
             print(f"An error occurred: {e}")
             return False
 
     def delete_student(self, student_id):
-        self.cursor.execute("SELECT student_first_name FROM students WHERE student_id = ?", (student_id,))
-        student_first_name = self.cursor.fetchone()
-        self.cursor.execute("SELECT student_last_name FROM students WHERE student_id = ?", (student_id,))
-        student_last_name = self.cursor.fetchone()
+        self.db.cursor.execute("SELECT student_first_name FROM students WHERE student_id = ?", (student_id,))
+        student_first_name = self.db.cursor.fetchone()
+        self.db.cursor.execute("SELECT student_last_name FROM students WHERE student_id = ?", (student_id,))
+        student_last_name = self.db.cursor.fetchone()
         if student_first_name and student_first_name[0]:
-            self.cursor.execute("DELETE FROM students WHERE student_id = ?", (student_id,))
-            self.conn.commit()
+            self.db.cursor.execute("DELETE FROM students WHERE student_id = ?", (student_id,))
+            self.db.conn.commit()
             print(f"Student: {student_first_name[0]} {student_last_name[0]} deleted")
         else:
             print(f"Error: Library doesn't have this student yet")
 
-    def add_book(self, book_name, book_author, is_book_taken, shelf, category_id):
-        self.cursor.execute("""
+    def add_book(self, book):
+        self.db.cursor.execute("""
                             INSERT INTO books (book_name, book_author, is_book_taken, shelf, category_id)
                             VALUES (?, ?, ?, ?, ?)""",
-                            (book_name, book_author, is_book_taken, shelf, category_id))
+                            (book.name, book.author, book.status, book.shelf, book.category_id))
         
-        self.conn.commit()
-        print(f"{book_name} added to the library")
+        self.db.conn.commit()
+        print(f"{book.name} added to the library")
 
     def delete_book(self, book_id):
-        self.cursor.execute("""
+        self.db.cursor.execute("""
             DELETE FROM books
             WHERE book_id = ?
         """, (book_id,))
-        self.conn.commit()
+        self.db.conn.commit()
         print(f"Book with ID {book_id} deleted from the library")
 
     def return_book_information(self, book_id):
-        self.cursor.execute("""SELECT * FROM books
+        self.db.cursor.execute("""SELECT * FROM books
                             WHERE book_id = ?""", (book_id,))
-        data = self.cursor.fetchall()
+        data = self.db.cursor.fetchall()
         return data
                     
     def borrow_book(self, student_id, book_id):
-        self.cursor.execute("""SELECT is_book_taken FROM books
+        self.db.cursor.execute("""SELECT is_book_taken FROM books
                     WHERE book_id = ?""", (book_id,))
-        is_available = self.cursor.fetchone()
+        is_available = self.db.cursor.fetchone()
         
         if is_available and is_available[0] == 'available':
-            self.cursor.execute("""UPDATE books SET is_book_taken = 'borrowed'
+            self.db.cursor.execute("""UPDATE books SET is_book_taken = 'borrowed'
                                 WHERE book_id = ?""", (book_id,))
-            self.cursor.execute("""INSERT INTO borrowed_books (return_date, student_id, book_id)
+            self.db.cursor.execute("""INSERT INTO borrowed_books (return_date, student_id, book_id)
                                 VALUES (?, ?, ?)""", (datetime.now(), student_id, book_id))
-            self.conn.commit()
+            self.db.conn.commit()
 
             print(f"{self.return_book_information(book_id)} borrowed")
         else:
             print('this student cannot borrow this book')
 
     def pass_the_book(self, student_id, book_id):
-        self.cursor.execute("SELECT is_book_taken FROM books WHERE book_id = ?", (book_id,))
-        is_available = self.cursor.fetchone()
+        self.db.cursor.execute("SELECT is_book_taken FROM books WHERE book_id = ?", (book_id,))
+        is_available = self.db.cursor.fetchone()
         if is_available and is_available[0] == 'borrowed':
-            self.cursor.execute("""UPDATE books SET is_book_taken = 'available' 
+            self.db.cursor.execute("""UPDATE books SET is_book_taken = 'available' 
                                 WHERE book_id = ?""", (book_id,))
-            self.cursor.execute("INSERT INTO borrowed_books (return_date, student_id, book_id) VALUES (?, ?, ?)",
-                                (datetime.now(), student_id, book_id))
+            self.db.cursor.execute("""INSERT INTO borrowed_books (return_date, student_id, book_id) 
+                                   VALUES (?, ?, ?)""",
+                                   (datetime.now(), student_id, book_id))
             
-            self.conn.commit()
+            self.db.conn.commit()
             print(f"{self.return_book_information(book_id)} passed.")
         else:
             print("The book was not borrowed")
 
     def show_all_books(self):
-        self.cursor.execute("SELECT * FROM books")
-        all_books = self.cursor.fetchall()
+        self.db.cursor.execute("SELECT * FROM books")
+        all_books = self.db.cursor.fetchall()
 
         if all_books:
             print("\nList of all books in the library:")
@@ -170,8 +189,8 @@ class Librarian:
             print("The library is currently empty.")
 
     def show_students(self):
-        self.cursor.execute("SELECT * FROM students")
-        students = self.cursor.fetchall()
+        self.db.cursor.execute("SELECT * FROM students")
+        students = self.db.cursor.fetchall()
 
         if students:
             print("List of students:")
@@ -191,7 +210,8 @@ class Librarian:
                 is_book_taken = input('enter available/borrowed: ')
                 shelf = input("Please, enter shelf: ")
                 category_id = input("Enter a category ID: ")
-                self.add_book(book_name, book_author, is_book_taken, shelf, category_id)
+                book = Book(book_name, book_author, is_book_taken, shelf, category_id)
+                self.add_book(book)
             elif action == '2':
                 book_id = input('Please, enter book_id: ')
                 self.delete_book(book_id)
@@ -211,7 +231,8 @@ class Librarian:
                 last_name = input("Enter the student's last name: ")
                 student_grade = input("Enter student grade: ")
                 school_student_id = input("Enter student ID: ")
-                self.student_registration(first_name, last_name, student_grade, school_student_id)
+                student = Student(first_name, last_name, student_grade, school_student_id)
+                self.student_registration(student)
             elif action == '6':
                 self.show_all_books()
             elif action == '7':
@@ -222,7 +243,7 @@ class Librarian:
 
 
 if __name__ == '__main__':
-    librarian = Librarian(DB_DIR)
-    librarian.create_tables()
+    library_db = LibraryDatabase(DB_DIR)
+    library_db.create_tables()
+    librarian = Librarian(library_db)
     librarian.menu()
- 
