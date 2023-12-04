@@ -17,7 +17,7 @@ currency_options = {"1": "USD", "2": "EUR", "3": "PLN"}
 
 def is_date_valid(date_input):
     try:
-        date = datetime.strptime(date_input, "%Y-%m-%d")
+        date = datetime.strptime(date_input, "%Y.%m.%d")
         return date
     except ValueError:
         print("Invalid date format")
@@ -40,27 +40,41 @@ def is_interval_valid(date_interval):
         return None
 
 
+def is_date_future(date_input):
+    current_date = datetime.now()
+    return date_input > current_date if date_input else False
+
+
 def start():
     choice = input("1. Date\n2. Time interval\nPlease enter 1/2: ")
 
     if choice == '1':
-        date_input = input('Please, enter date (YYYY-MM-DD): ')
+        date_input = input('Please, enter date (YYYY.MM.DD): ')
         date = is_date_valid(date_input)
-        if date:
+        if date and not is_date_future(date):
             currency = input('Enter currency: 1. USD\n2. EUR\n3. PLN\n: ')
             get_exchange_rate(date, currency)
+        elif is_date_future(date):
+            print("Entered date is in the future. Please enter a valid date.")
     elif choice == '2':
         date_interval = input(
             "Please, enter an interval (YYYY.MM.DD - YYYY.MM.DD): "
         )
         dates = is_interval_valid(date_interval)
         if dates:
-            currency = input('Enter currency: 1. USD\n2. EUR\n3. PLN\n: ')
-            if currency in currency_options:
+            if any(is_date_future(date) for date in dates):
+                print("Entered date interval contains a date from the future.")
+                print("Showing exchange rates up to the future date.")
+                currency = input('Enter currency: 1. USD\n2. EUR\n3. PLN\n: ')
+                for date in dates:
+                    if date <= datetime.now():
+                        get_exchange_rate(date, currency)
+                    else:
+                        break
+            else:
+                currency = input('Enter currency: 1. USD\n2. EUR\n3. PLN\n: ')
                 for date in dates:
                     get_exchange_rate(date, currency)
-            else:
-                print("Invalid currency selection")
         else:
             print("Invalid date interval")
 
@@ -93,4 +107,3 @@ def get_exchange_rate(date, currency):
 
 if __name__ == "__main__":
     start()
- 
