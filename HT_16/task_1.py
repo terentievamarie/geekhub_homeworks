@@ -152,7 +152,7 @@ class RobotOrderAutomation:
             file_name = f"output/{order_number}_robot.jpg"
             self.current_picture.save(file_name)
         else:
-            print("Error: No robot image to save.")
+            print(" No image.")
 
     def make_all_robot_orders(self):
         data = self.get_order_data(BASE_URL)
